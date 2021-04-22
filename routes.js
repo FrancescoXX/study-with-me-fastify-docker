@@ -4,72 +4,60 @@ async function routes(fastify, options) {
     return { hello: 'world' };
   });
 
-  fastify.get('/test', async (request, reply) => {
-    return { hello: 'Srikar' };
+  // INIT TABLE. Launch just once to create the table
+  fastify.get('/initDB', (req, reply) => {
+    fastify.pg.connect(onConnect);
+    function onConnect(err, client, release) {
+      if (err) return reply.send(err);
+      client.query(
+        'CREATE TABLE IF NOT EXISTS "users" ("id" SERIAL PRIMARY KEY,"name" varchar(30),"description" varchar(30),"tweets" integer);',
+        function onResult(err, result) {
+          release();
+          reply.send(err || result);
+        }
+      );
+    }
   });
 
-  // READ ALL
+  //GET AL USERS
   fastify.route({
     method: 'GET',
-    url: '/testget',
-    schema: {
-      querystring: {
-        name: { type: 'string' },
-        excitement: { type: 'integer' },
-      },
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            hello: { type: 'string' },
-          },
-        },
-      },
-    },
-    handler: function (request, reply) {
-      reply.send({ hello: 'testget' });
+    url: '/users',
+    handler: async function (request, reply) {
+      fastify.pg.connect(onConnect);
+      function onConnect(err, client, release) {
+        if (err) return reply.send(err);
+        client.query('SELECT * from users', function onResult(err, result) {
+          console.log(result.rows);
+          release();
+          reply.send(err || result.rows);
+        });
+      }
     },
   });
 
-  // READ ONE
+  //GET ONE USER if exists
   fastify.route({
     method: 'GET',
-    url: '/testgetone/:id',
-    schema: {
-      querystring: {
-        name: { type: 'string' },
-        excitement: { type: 'integer' },
-      },
-      params: {
-        type: 'object',
-        properties: {
-          id: { type: 'string' },
-        },
-      },
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            hello: { type: 'string' },
-          },
-        },
-      },
-    },
-    handler: function (request, reply) {
-      console.log(request.params);
-      reply.send('test get ' + request.params.id);
+    url: '/users/:id',
+    handler: async function (request, reply) {
+      fastify.pg.connect(onConnect);
+      function onConnect(err, client, release) {
+        if (err) return reply.send(err);
+        client.query(`SELECT * from users where id=${request.params.id}`, function onResult(err, result) {
+          console.log(result.rows[0]);
+          release();
+          reply.send(err || result.rows[0]);
+        });
+      }
     },
   });
 
-  // CREATE
+  //Create users
   fastify.route({
     method: 'POST',
-    url: '/testpost',
+    url: '/users',
     schema: {
-      querystring: {
-        name: { type: 'string' },
-        excitement: { type: 'integer' },
-      },
       response: {
         200: {
           type: 'object',
@@ -80,56 +68,60 @@ async function routes(fastify, options) {
       },
     },
     handler: function (request, reply) {
-      console.log(request.body);
-      reply.send({ hello: 'testpost' });
+      fastify.pg.connect(onConnect);
+      function onConnect(err, client, release) {
+        if (err) return reply.send(err);
+        const newUser = request.body;
+        client.query(
+          `INSERT into users (id,name,description,tweets) VALUES(${newUser.id},'${newUser.name}','${newUser.description}',${newUser.tweets})`,
+          function onResult(err, result) {
+            release();
+            reply.send(err || result);
+          }
+        );
+      }
     },
   });
 
-  // UPDATE
+  //UPDATE ONE USER fields
   fastify.route({
     method: 'PUT',
-    url: '/testput',
-    schema: {
-      querystring: {
-        name: { type: 'string' },
-        excitement: { type: 'integer' },
-      },
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            hello: { type: 'string' },
-          },
-        },
-      },
-    },
-    handler: function (request, reply) {
-      console.log(request.body);
-      reply.send('PUT Request');
+    url: '/users/:id',
+    handler: async function (request, reply) {
+      fastify.pg.connect(onConnect);
+      async function onConnect(err, client, release) {
+        if (err) return reply.send(err);
+        const oldUserReq = await client.query(`SELECT * from users where id=${request.params.id}`);
+        const oldUser = oldUserReq.rows[0];
+        console.log('Updating with ', request.body);
+        client.query(
+          `UPDATE users SET(name,description,tweets) = ('${request.body.name}', '${request.body.description || oldUser.description}', ${
+            request.body.tweets || oldUser.tweets
+          })
+      WHERE id=${request.params.id}`,
+          function onResult(err, result) {
+            release();
+            reply.send(err || `Updated: ${request.params.id}`);
+          }
+        );
+      }
     },
   });
 
-  // UPDATE
+  //DELETE ONE USER if exists
   fastify.route({
     method: 'DELETE',
-    url: '/testdelete',
-    schema: {
-      querystring: {
-        name: { type: 'string' },
-        excitement: { type: 'integer' },
-      },
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            hello: { type: 'string' },
-          },
-        },
-      },
-    },
-    handler: function (request, reply) {
-      console.log(request.body);
-      reply.send('DELETE Request');
+    url: '/users/:id',
+    handler: async function (request, reply) {
+      fastify.pg.connect(onConnect);
+      function onConnect(err, client, release) {
+        if (err) return reply.send(err);
+        console.log('FINDING USER: ', request.params.id);
+        client.query(`DELETE FROM users WHERE id=${request.params.id}`, function onResult(err, result) {
+          release();
+          reply.send(err || `Deleted: ${request.params.id}`);
+        });
+      }
     },
   });
 }
