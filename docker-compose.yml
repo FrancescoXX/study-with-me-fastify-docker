@@ -1,4 +1,4 @@
-version: "3.8"
+version: '3.8'
 services:
   fastify_backend:
     container_name: fastify_backend
@@ -6,4 +6,20 @@ services:
     build:
       context: .
     ports:
-      - "3000:3000"
+      - '3000:3000'
+    depends_on: 
+      - db
+
+  db:
+    container_name: db
+    hostname: db
+    image: 'postgres:13'
+    ports:
+      - '5432:5432'
+    restart: always
+    env_file: .env
+    volumes:
+      - fastify_volume:/var/lib/postgres/data
+
+volumes:
+  fastify_volume: {}
