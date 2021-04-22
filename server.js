@@ -1,20 +1,15 @@
 // Require the framework and instantiate it
-const fastify = require('fastify')({ logger: true })
+const fastify = require('fastify')({ logger: true });
 
-fastify.register(require('./our-first-route'))
-
-// Declare a route
-fastify.get('/', async (request, reply) => {
-  return { hello: 'world' }
-})
+fastify.register(require('./routes'));
 
 // Run the server!
 const start = () => {
   fastify.listen(3000, '0.0.0.0', (err, address) => {
     if (err) {
-      fastify.log.error(err)
-      process.exit(1)
+      fastify.log.error(err);
+      process.exit(1);
     }
-  })
-}
-start()
+  });
+};
+start();
