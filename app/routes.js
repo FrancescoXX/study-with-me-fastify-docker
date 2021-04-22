@@ -1,5 +1,5 @@
 async function routes(fastify, options) {
-  // Declare a route
+  // Testing route
   fastify.get('/', async (request, reply) => {
     return { hello: 'world' };
   });
@@ -28,7 +28,6 @@ async function routes(fastify, options) {
       function onConnect(err, client, release) {
         if (err) return reply.send(err);
         client.query('SELECT * from users', function onResult(err, result) {
-          console.log(result.rows);
           release();
           reply.send(err || result.rows);
         });
@@ -45,7 +44,6 @@ async function routes(fastify, options) {
       function onConnect(err, client, release) {
         if (err) return reply.send(err);
         client.query(`SELECT * from users where id=${request.params.id}`, function onResult(err, result) {
-          console.log(result.rows[0]);
           release();
           reply.send(err || result.rows[0]);
         });
@@ -57,16 +55,6 @@ async function routes(fastify, options) {
   fastify.route({
     method: 'POST',
     url: '/users',
-    schema: {
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            hello: { type: 'string' },
-          },
-        },
-      },
-    },
     handler: function (request, reply) {
       fastify.pg.connect(onConnect);
       function onConnect(err, client, release) {
@@ -93,7 +81,6 @@ async function routes(fastify, options) {
         if (err) return reply.send(err);
         const oldUserReq = await client.query(`SELECT * from users where id=${request.params.id}`);
         const oldUser = oldUserReq.rows[0];
-        console.log('Updating with ', request.body);
         client.query(
           `UPDATE users SET(name,description,tweets) = ('${request.body.name}', '${request.body.description || oldUser.description}', ${
             request.body.tweets || oldUser.tweets
@@ -116,7 +103,6 @@ async function routes(fastify, options) {
       fastify.pg.connect(onConnect);
       function onConnect(err, client, release) {
         if (err) return reply.send(err);
-        console.log('FINDING USER: ', request.params.id);
         client.query(`DELETE FROM users WHERE id=${request.params.id}`, function onResult(err, result) {
           release();
           reply.send(err || `Deleted: ${request.params.id}`);
