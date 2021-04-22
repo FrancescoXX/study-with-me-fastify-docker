@@ -7,12 +7,12 @@ fastify.get('/', async (request, reply) => {
 })
 
 // Run the server!
-const start = async () => {
-  try {
-    await fastify.listen(3000)
-  } catch (err) {
-    fastify.log.error(err)
-    process.exit(1)
-  }
+const start = () => {
+  fastify.listen(3000, '0.0.0.0', (err, address) => {
+    if (err) {
+      fastify.log.error(err)
+      process.exit(1)
+    }
+  })
 }
 start()
