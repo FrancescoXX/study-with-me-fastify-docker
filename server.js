@@ -99,6 +99,33 @@ fastify.route({
   },
 });
 
+//UPDATE ONE USER fields
+fastify.route({
+  method: 'PUT',
+  url: '/users/:id',
+  handler: async function (request, reply) {
+    fastify.pg.connect(onConnect);
+    async function onConnect(err, client, release) {
+      if (err) return reply.send(err);
+
+      const oldUserReq = await client.query(`SELECT * from users where id=${request.params.id}`);
+      const oldUser = oldUserReq.rows[0];
+
+      console.log('Updating with ', request.body);
+      client.query(
+        `UPDATE users SET(name,description,tweets) = ('${request.body.name}', '${request.body.description || oldUser.description}', ${
+          request.body.tweets || oldUser.tweets
+        })
+      WHERE id=${request.params.id}`,
+        function onResult(err, result) {
+          release();
+          reply.send(err || `Updated: ${request.params.id}`);
+        }
+      );
+    }
+  },
+});
+
 //Create users
 fastify.route({
   method: 'POST',
