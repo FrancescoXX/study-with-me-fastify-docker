@@ -73,7 +73,7 @@ async function routes(fastify, options) {
         if (err) return reply.send(err);
         const newUser = request.body;
         client.query(
-          `INSERT into users (id,name,description,tweets) VALUES(${newUser.id},'${newUser.name}','${newUser.description}',${newUser.tweets})`,
+          `INSERT into users (name,description,tweets) VALUES('${newUser.name}','${newUser.description}',${newUser.tweets})`,
           function onResult(err, result) {
             release();
             reply.send(err || result);
