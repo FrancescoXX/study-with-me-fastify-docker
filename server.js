@@ -10,19 +10,6 @@ fastify.register(require('fastify-postgres'), {
   connectionString: `postgres://${process.env.POSTGRES_USER}:${process.env.POSTGRES_PASSWORD}@${process.env.POSTGRES_SERVICE}:${process.env.POSTGRES_PORT}/${process.env.POSTGRES_DB}`,
 });
 
-// await client.connect();
-/**
- * Create a new Table if it not exists
- */
-// try {
-//   await client.connect();
-//   await client.query('CREATE TABLE IF NOT EXISTS "products" ("id" SERIAL PRIMARY KEY,"name" varchar(30),"description" varchar(30),"price" integer);');
-// } catch (error) {
-//   console.error("CAN'T CONNECT TO DB!");
-// } finally {
-//   // await client.end();
-// }
-
 // init db
 fastify.get('/initDB', (req, reply) => {
   fastify.pg.connect(onConnect);
@@ -49,11 +36,6 @@ fastify.route({
       name: { type: 'string' },
       excitement: { type: 'integer' },
     },
-    // response: {
-    //   200: {
-    //     type: 'object',
-    //   },
-    // },
   },
   handler: async function (request, reply) {
     fastify.pg.connect(onConnect);
@@ -66,6 +48,52 @@ fastify.route({
         console.log(result.rows);
         release();
         reply.send(err || result.rows);
+      });
+    }
+  },
+});
+
+//GET ONE USER if exists
+fastify.route({
+  method: 'GET',
+  url: '/users/:id',
+  schema: {
+    querystring: {
+      name: { type: 'string' },
+      excitement: { type: 'integer' },
+    },
+  },
+  handler: async function (request, reply) {
+    fastify.pg.connect(onConnect);
+
+    function onConnect(err, client, release) {
+      if (err) return reply.send(err);
+      console.log('FINDING USER: ', request.params.id);
+
+      client.query(`SELECT * from users where id=${request.params.id}`, function onResult(err, result) {
+        // return the first result
+        console.log(result.rows[0]);
+        release();
+        reply.send(err || result.rows[0]);
+      });
+    }
+  },
+});
+
+//DELETE ONE USER if exists
+fastify.route({
+  method: 'DELETE',
+  url: '/users/:id',
+  handler: async function (request, reply) {
+    fastify.pg.connect(onConnect);
+
+    function onConnect(err, client, release) {
+      if (err) return reply.send(err);
+      console.log('FINDING USER: ', request.params.id);
+
+      client.query(`DELETE FROM users WHERE id=${request.params.id}`, function onResult(err, result) {
+        release();
+        reply.send(err || `Deleted: ${request.params.id}`);
       });
     }
   },
@@ -106,8 +134,6 @@ fastify.route({
         }
       );
     }
-
-    // reply.send();
   },
 });
 
