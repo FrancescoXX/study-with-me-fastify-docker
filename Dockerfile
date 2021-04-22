@@ -10,8 +10,8 @@ COPY package.json package-lock.json* ./
 RUN npm install --no-optional && npm cache clean --force
 
 # copy in our source code last, as it changes the most
-WORKDIR /app
+WORKDIR /usr
 
 COPY . .
 
-CMD [ "node", "server.js"]
+CMD [ "node", "app/server.js"]

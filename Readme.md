@@ -3,6 +3,8 @@
 ## To run it with docker:
 ```
 docker-compose up --build
+
+Alternative: npm start
 ```
 
 ## Test it with docker
