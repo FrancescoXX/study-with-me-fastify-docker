@@ -1,3 +1,9 @@
+#Article on Hashnode:
+https://blog.francescociulla.com/crud-api-using-nodejs-fastify-postgres-and-docker#comments-list
+
+#Video:
+https://www.youtube.com/watch?v=RU9SkhLGDP0
+
 # Fastify with docker
 
 ## To run it with docker:
